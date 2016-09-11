@@ -1,0 +1,19 @@
+{
+	"name": "prom-zwave",
+	"version": "1.0.0",
+	"description": "",
+	"main": "prom-zwave.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://archive.eldergods.com/prom-zwave"
+	},
+	"keywords": [],
+	"author": "rektide de la faye",
+	"license": "X",
+	"dependencies": {
+		"openzwave-shared": "^1.2.0"
+	}
+}
