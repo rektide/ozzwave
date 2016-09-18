@@ -23,12 +23,18 @@ function PromZwave(){}
 util.inherits(PromZwave, OpenZwave)
 
 PromZwave.prototype.eventLog= function(eventNames){
+	var log= fs.createWriteStream("log.ndjson", {flags: "a"})
+	log.write(JSON.stringify(["prom-zwave startup"]))
 	var logHandler= (eventName)=> {
 		return (...args)=> {
 			var i= this.logDepth;
+			args.unshift(eventName)
+			if(log){
+				log.write(JSON.stringify(args))
+				log.write("\n")
+			}
 			for(; i>0&& !args[i-1]; --i){}
 			args= args.slice(0, i)
-			args.unshift(eventName)
 			console.log.apply(console, args)
 		}
 	}
@@ -43,10 +49,14 @@ PromZwave.prototype.eventLog= function(eventNames){
 		'node ready',
 		'node event',
 		'polling enabled/disabled',
-		'scene event'
+		'scene event',
+		'value added',
+		'value changed',
+		'value removed',
+		'notification',
 	].forEach( listen)
 }
-PromZwave.prototype.logDepth= 1
+PromZwave.prototype.logDepth= 3
 
 var _connect= OpenZwave.prototype.connect
 PromZwave.prototype.connect= function(path){
