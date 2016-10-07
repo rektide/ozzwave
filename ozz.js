@@ -38,11 +38,44 @@ Ozz.eventMap= {
 	"polling enabled/disabled":{ name: "polling", category: "node", args:[ "nodeId"]},
 	"scene event":{ name: "scene", category: "node", args:[ "nodeId", "eventId"]},
 	"node event":{ name:"event", category: "node", args:[ "nodeId", "data"]},
-	"value added":{ name: "added", category:"value", args:[ "nodeId", "commandClass", "valueId"]},
-	"value changed":{ name: "changed", category:"value", args:[ "nodeId", "commandClass", "valueId"]},
-	"value refreshed":{ name: "refreshed", category:"value", args:[ "nodeId", "commandClass", "valueId"]},
-	"value removed":{ name: "removed", category:"value", args:[ "nodeId", "commandClass", "instance", "index"]},
+	"value added":{ name: "added", category:"value", args:[ "nodeId", "classId", "valueId"]},
+	"value changed":{ name: "changed", category:"value", args:[ "nodeId", "classId", "valueId"]},
+	"value refreshed":{ name: "refreshed", category:"value", args:[ "nodeId", "classId", "valueId"]},
+	"value removed":{ name: "removed", category:"value", args:[ "nodeId", "classId", "instance", "index"]},
 	"controller command":{ name:"command", category:"driver", args:[ "nodeId", "state", "error", "help"]},
+}
+for( var eventType in Ozz.eventMap){
+	var t= Ozz.eventMap[eventType]
+	var copyId= t.become
+	if( !t.become){
+		var info= new RegExp(t.category+ ".*"+ "Info")
+		var id= new RegExp(t.category+ ".*"+ "Id")
+		for( var key of t.args){
+			if( info.test( key)){
+				t.become= key
+			}else if( !t.become&& id.test( key)){
+				t.become= key
+			}
+		}
+	}
+}
+
+var _tail= /^(.+)(Type|Id)$/i
+function camel(key){
+	// camel case
+	var frags= key.split(/_/g)
+	for( var i = 1; i < frags.length; ++i){
+		var frag= frags[i]
+		frags[ i]= frag[0].toUpperCase().concat(frag.slice(1))
+	}
+	key= frags.join("")
+
+	// fix "id" & "type" suffix
+	var tail= _tail.exec(key)
+	if( tail){
+		key= tail[1] + tail[2][0].toUpperCase() + tail[2].slice(1)
+	}
+	return key
 }
 
 Ozz.prototype.eventLog= function(eventNames){
@@ -53,11 +86,27 @@ Ozz.prototype.eventLog= function(eventNames){
 		return function( ...args){
 			var
 			  o= {eventType, timestamp: Date.now()},
-			  t= Ozz.eventMap[ eventType]
+			  t= Ozz.eventMap[ eventType],
+			  id,
+			  info
 			for( var i in t.args){
-				var key= t.args[ i]
-				o[ key]= args[ i]
+				var
+				  val= args[ i],
+				  key= t.args[ i]
+				o[ key]= val
 			}
+
+			// look for id/info elements
+			var become= t.become
+			if( become){
+				var copy= o[ become]
+				delete o[ become]
+				for( var key in copy){
+					o[ camel( key)]= copy[ key]
+				}
+			}
+
+			// write
 			if( log){
 				log.write(JSON.stringify( o))
 				log.write( "\n")
