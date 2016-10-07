@@ -83,7 +83,7 @@ Ozz.prototype.eventLog= function(eventNames){
 	log.write(JSON.stringify({"eventType": "ozz startup"}))
 	log.write("\n");
 	var realizer= (eventType)=> {
-		return function( ...args){
+		return ( ...args)=>{
 			var
 			  o= {eventType, timestamp: Date.now()},
 			  t= Ozz.eventMap[ eventType],
@@ -106,11 +106,14 @@ Ozz.prototype.eventLog= function(eventNames){
 				}
 			}
 
-			// write
+			// write log
 			if( log){
 				log.write(JSON.stringify( o))
 				log.write( "\n")
 			}
+
+			// output
+			this.emit( t.category, o)
 		}
 	}
 
