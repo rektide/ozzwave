@@ -87,8 +87,12 @@ Ozz.prototype.eventLog= function(eventNames){
 	var realizer= (eventType)=> {
 		return ( ...args)=>{
 			var
-			  o= {eventType, timestamp: Date.now()},
 			  t= Ozz.eventMap[ eventType],
+			  o= {
+				eventType: t.name,
+				eventCategory: t.category,
+				timestamp: Date.now()
+			  },
 			  id,
 			  info
 			for( var i in t.args){
