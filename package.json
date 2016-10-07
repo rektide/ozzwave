@@ -1,14 +1,14 @@
 {
-	"name": "prom-zwave",
+	"name": "ozz",
 	"version": "1.0.0",
-	"description": "",
+	"description": "event sourced OpenZwave",
 	"main": "prom-zwave.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://archive.eldergods.com/prom-zwave"
+		"url": "https://archive.eldergods.com/ozz"
 	},
 	"keywords": [],
 	"author": "rektide de la faye",
