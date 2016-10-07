@@ -44,6 +44,7 @@ Ozz.eventMap= {
 	"value refreshed":{ name: "refreshed", category:"value", args:[ "nodeId", "classId", "valueId"]},
 	"value removed":{ name: "removed", category:"value", args:[ "nodeId", "classId", "instance", "index"]},
 	"controller command":{ name:"command", category:"driver", args:[ "nodeId", "state", "error", "help"]},
+	"notification":{ name:"notification", category:"node", args:["nodeId", "notification"]}
 }
 for( var eventType in Ozz.eventMap){
 	var t= Ozz.eventMap[eventType]
@@ -127,6 +128,21 @@ Ozz.prototype.eventLog= function(eventNames){
 	for(var eventType of Object.keys(Ozz.eventMap)){
 		listen( eventType)
 	}
+}
+
+// try to setup an power strip to monitor watts frequently, and hail back if watt level changes
+Ozz.prototype.monitor= function(nodeId){
+	this.setValue(nodeId, 112, 1, 80, "Hail") // hailing notifications
+	this.setValue(nodeId, 112, 1, 5, 4) // whole strip watts
+	this.setValue(nodeId, 112, 1, 6, 4) // socket 1-6 watts
+	this.setValue(nodeId, 112, 1, 7, 4)
+	this.setValue(nodeId, 112, 1, 8, 4)
+	this.setValue(nodeId, 112, 1, 9, 4)
+	this.setValue(nodeId, 112, 1, 10, 4)
+	this.setValue(nodeId, 112, 1, 11, 4)
+	this.setValue(nodeId, 112, 1, 111, 20) // poll 20s
+	var kwh= 127, w= Math.pow(2, 8)* kwh
+	this.setValue(nodeId, 112, 1, 101, w) // report group sends watts
 }
 
 var _connect= OpenZwave.prototype.connect
