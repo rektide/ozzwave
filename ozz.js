@@ -1,5 +1,6 @@
 var
   fs= require("fs"),
+  memoizee= require("memoizee"),
   OpenZwave= require("openzwave-shared"),
   util= require("util")
 
@@ -61,7 +62,7 @@ for( var eventType in Ozz.eventMap){
 }
 
 var _tail= /^(.+)(Type|Id)$/i
-function camel(key){
+function _camel(key){
 	// camel case
 	var frags= key.split(/_/g)
 	for( var i = 1; i < frags.length; ++i){
@@ -77,6 +78,7 @@ function camel(key){
 	}
 	return key
 }
+var camel= memoizee(_camel)
 
 Ozz.prototype.eventLog= function(eventNames){
 	var log= fs.createWriteStream("log.ndjson", {flags: "a"})

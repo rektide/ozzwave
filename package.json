@@ -2,7 +2,7 @@
 	"name": "ozz",
 	"version": "1.0.0",
 	"description": "event sourced OpenZwave",
-	"main": "prom-zwave.js",
+	"main": "ozz.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
@@ -14,6 +14,7 @@
 	"author": "rektide de la faye",
 	"license": "X",
 	"dependencies": {
+		"memoizee": "^0.4.1",
 		"openzwave-shared": "^1.2.0"
 	}
 }
