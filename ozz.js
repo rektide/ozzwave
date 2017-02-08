@@ -1,167 +1,110 @@
+"use strict"
 var
-  fs= require("fs"),
-  memoizee= require("memoizee"),
-  OpenZwave= require("openzwave-shared"),
-  util= require("util")
+  events= require( "events"),
+  eventMap= require( "./eventMap"),
+  fs= require( "fs"),
+  memoizee= require( "memoizee"),
+  OpenZwave= require( "openzwave-shared"),
+  ozwCommandClasses
 
-function factory( path, options){
-	if(this instanceof factory){
-		throw new Error("Invalid use of 'new'")
-	}
-	if( typeof path=== "object"){
-		options= path
-		path= undefined
-	}
-	path= path|| "/dev/ttyACM0"
-	options= options|| {}
-
-	var zwave= new OpenZwave(options)
-	Object.setPrototypeOf(zwave, Ozz.prototype)
-	zwave.path= path
-	return zwave
+try{
+	// if available, ozw-command-classes will create a human readable "command class" when describing nodes & values
+	ozwCommandClasses= require( "ozw-command-classes")
+}catch(){
 }
 
-function Ozz(){}
-util.inherits(Ozz, OpenZwave)
-
-// table for demarshalling zwave event
-// https://github.com/OpenZWave/node-openzwave-shared/blob/master/README-events.md
-var _type= "a.eldergods.com/ozz"
-Ozz.eventMap= {
-	"driver ready":{ name:"ready", category: "driver", args:[  "homeid"]},
-	"driver failed":{ name:"failed", category: "driver", args:[ ]},
-	"scan complete":{ name:"complete", category: "driver", args:[ ]},
-	"node added":{ name:"added", category: "node", args:[ "nodeId"]},
-	"node removed":{ name: "removed", category: "node", args:[ "nodeId"]},
-	"node naming":{ name: "naming", category: "node", args:[ "nodeId", "nodeInfo"]},
-	"node available":{ name: "available", category: "node", args:[ "nodeId", "nodeAvailableInfo"]},
-	"node ready":{ name: "ready", category: "node", args:[ "nodeId", "nodeInfo"]},
-	"polling enabled/disabled":{ name: "polling", category: "node", args:[ "nodeId"]},
-	"scene event":{ name: "scene", category: "node", args:[ "nodeId", "eventId"]},
-	"node event":{ name:"event", category: "node", args:[ "nodeId", "data"]},
-	"value added":{ name: "added", category:"value", args:[ "nodeId", "classId", "valueId"]},
-	"value changed":{ name: "changed", category:"value", args:[ "nodeId", "classId", "valueId"]},
-	"value refreshed":{ name: "refreshed", category:"value", args:[ "nodeId", "classId", "valueId"]},
-	"value removed":{ name: "removed", category:"value", args:[ "nodeId", "classId", "instance", "index"]},
-	"controller command":{ name:"command", category:"driver", args:[ "nodeId", "state", "error", "help"]},
-	"notification":{ name:"notification", category:"node", args:["nodeId", "notification"]}
-}
-for( var eventType in Ozz.eventMap){
-	var t= Ozz.eventMap[eventType]
-	var copyId= t.become
-	if( !t.become){
-		var info= new RegExp(t.category+ ".*"+ "Info")
-		var id= new RegExp(t.category+ ".*"+ "Id")
-		for( var key of t.args){
-			if( info.test( key)){
-				t.become= key
-			}else if( !t.become&& id.test( key)){
-				t.become= key
-			}
+/**
+ * Ozz wraps OpenZwave, providing friender to use interfaces than the raw data OpenZwave exposes.
+ * @extends OpenZwave
+ */
+class Ozz extends OpenZwave{
+	constructor( options){
+		super( options)
+		if( options.path){
+			this.path= path
 		}
 	}
-}
+	/**
+	 * Patch emit to generate synthetic Ozz events from raw OpenZwave events
+	 * @override {@link Openzwave#emit}
+	 */
+	emit( eventName, ...args){
+		// lookup what kind of raw event this is
+		var decode= eventMap[ eventName]
+		if( decode=== null){
+			// failed to detect a raw OpenZwave event, pass this through
+			return OpenZwave.prototype.emit.call( this, args[0])
+		}
 
-var _tail= /^(.+)(Type|Id)$/i
-function _camel(key){
-	// camel case
-	var frags= key.split(/_/g)
-	for( var i = 1; i < frags.length; ++i){
-		var frag= frags[i]
-		frags[ i]= frag[0].toUpperCase().concat(frag.slice(1))
-	}
-	key= frags.join("")
+		// lookup
+		var
+		  o,
+		  become= decode.become,
+		  timestamp= Date.now()
+		if( become){
+			o= args[ become]
+			o.eventName= decode.name
+			o.eventCategory= o.eventCategory
+			o.timestamp= timestamp
+		}else{
+			o= {
+				eventName: decode.name
+				eventCategory: decode.category,
+				timestamp
+			}
+		}
 
-	// fix "id" & "type" suffix
-	var tail= _tail.exec(key)
-	if( tail){
-		key= tail[1] + tail[2][0].toUpperCase() + tail[2].slice(1)
-	}
-	return key
-}
-var camel= memoizee(_camel)
-
-Ozz.prototype.eventLog= function(eventNames){
-	var log= fs.createWriteStream("log.ndjson", {flags: "a"})
-	log.write(JSON.stringify({"eventType": "ozz startup"}))
-	log.write("\n");
-	var realizer= (eventType)=> {
-		return ( ...args)=>{
+		var
+		  id,
+		  info
+		for( var i=0; i< decode.args.length; ++i){
+			if( i=== become){
+				// o *is* the become arg, no need to add it again.
+				continue
+			}
 			var
-			  t= Ozz.eventMap[ eventType],
-			  o= {
-				eventType: t.name,
-				eventCategory: t.category,
-				timestamp: Date.now()
-			  },
-			  id,
-			  info
-			for( var i in t.args){
-				var
-				  val= args[ i],
-				  key= t.args[ i]
-				o[ key]= val
-			}
+			  key= decode.args[ i],
+			  val= args[ i]
+			o[ key]= val
+		}
 
-			// look for id/info elements
-			var become= t.become
-			if( become){
-				var copy= o[ become]
-				delete o[ become]
-				for( var key in copy){
-					o[ camel( key)]= copy[ key]
-				}
+		// emit event
+		OpenZwave.prototype.emit.call( this, decode.eventName, o)
+	}
+	/**
+	 * Override of {@link OpenZwave#connect} to default to `this.path` if no path parameter is given.
+	 * @param {string} [path] - a path to an openzwave compatible tty device.
+	 * @override
+	 */
+	connect( path){
+		OpenZwave.prototype.connect.call( this, path|| this.path)
+	}
+	/**
+	 * Generate logs of all synthesied event activity
+	 * @param {stream|string} [to=process.stdout] - the file name or output stream to write logs to
+	 */
+	debugLog( to){
+		if( !to|| to=== "-"){
+			to= process.stdout
+		}
+		if( typeof(to)=== "string"){
+			to= fs.createWriteStream( to, {flags: "a+"})
+		}
+		function jsonLog( o){
+			to.write( JSON.stringify(o))
+		}
+		for( var i in eventMap){
+			var eventName= eventMap[ i].eventName
+			this.on( eventName, jsonLog)
+		}
+		// clean up listeners but do not close the output stream
+		return ()=> {
+			for( var i in eventMap){
+				eventMap[ i].removeListener( eventMap[ i].eventName, jsonLog)
 			}
-
-			// write log
-			if( log){
-				log.write(JSON.stringify( o))
-				log.write( "\n")
-			}
-
-			// output
-			this.emit( t.category, o)
+			return to
 		}
 	}
-
-	var listen= (eventType)=> this.on( eventType, realizer( eventType));
-	for(var eventType of Object.keys(Ozz.eventMap)){
-		listen( eventType)
-	}
 }
 
-// try to setup an power strip to monitor watts frequently, and hail back if watt level changes
-Ozz.prototype.monitor= function(nodeId){
-	this.setValue(nodeId, 112, 1, 80, "Hail") // hailing notifications
-	this.setValue(nodeId, 112, 1, 5, 4) // whole strip watts
-	this.setValue(nodeId, 112, 1, 6, 4) // socket 1-6 watts
-	this.setValue(nodeId, 112, 1, 7, 4)
-	this.setValue(nodeId, 112, 1, 8, 4)
-	this.setValue(nodeId, 112, 1, 9, 4)
-	this.setValue(nodeId, 112, 1, 10, 4)
-	this.setValue(nodeId, 112, 1, 11, 4)
-	this.setValue(nodeId, 112, 1, 111, 20) // poll 20s
-	var kwh= 127, w= Math.pow(2, 8)* kwh
-	this.setValue(nodeId, 112, 1, 101, w) // report group sends watts
-}
-
-var _connect= OpenZwave.prototype.connect
-Ozz.prototype.connect= function(path){
-	_connect.call( this, path|| this.path)
-}
-
-function main(){
-	var zwave= module.exports(process.argv[2], {
-		ConsoleOutput: false
-	})
-	zwave.eventLog()
-	zwave.connect()
-	return zwave
-}
-
-module.exports= factory
-module.exports.main= main
-
-if(require.main=== module){
-	main()
-}
+module.exports= Ozz

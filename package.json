@@ -12,11 +12,14 @@
 	},
 	"keywords": [],
 	"author": "rektide de la faye",
-	"license": "X",
+	"license": "X11",
 	"dependencies": {
 		"es6-promisify": "^5.0.0",
 		"memoizee": "^0.4.1",
 		"ndjson": "^1.4.3",
 		"openzwave-shared": "^1.2.0"
+	},
+	"peerDependencies": {
+		"ozw-command-classes": "^1.0.0"
 	}
 }
