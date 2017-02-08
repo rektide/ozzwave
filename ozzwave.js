@@ -14,10 +14,10 @@ try{
 }
 
 /**
- * Ozz wraps OpenZwave, providing friender to use interfaces than the raw data OpenZwave exposes.
+ * Ozzwave wraps OpenZwave, providing friender to use interfaces than the raw data OpenZwave exposes.
  * @extends OpenZwave
  */
-class Ozz extends OpenZwave{
+class Ozzwave extends OpenZwave{
 	constructor( options){
 		super( options)
 		if( options.path){
@@ -107,4 +107,4 @@ class Ozz extends OpenZwave{
 	}
 }
 
-module.exports= Ozz
+module.exports= Ozzwave

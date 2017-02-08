@@ -1,4 +1,5 @@
-var Ozz= require( "./ozz")
+"use strict"
+var Ozz= require( "./ozzwave")
 
 function main( extra){
 	var

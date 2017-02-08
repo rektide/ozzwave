@@ -1,14 +1,14 @@
 {
-	"name": "ozz",
+	"name": "ozzwave",
 	"version": "1.0.0",
 	"description": "event sourced OpenZwave",
-	"main": "ozz.js",
+	"main": "ozzwave.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://archive.eldergods.com/ozz"
+		"url": "https://archive.eldergods.com/ozzwave"
 	},
 	"keywords": [],
 	"author": "rektide de la faye",
