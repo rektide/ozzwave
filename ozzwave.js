@@ -10,7 +10,7 @@ var
 try{
 	// if available, ozw-command-classes will create a human readable "command class" when describing nodes & values
 	ozwCommandClasses= require( "ozw-command-classes")
-}catch(){
+}catch(ex){
 }
 
 /**
@@ -20,9 +20,8 @@ try{
 class Ozzwave extends OpenZwave{
 	constructor( options){
 		super( options)
-		if( options.path){
-			this.path= path
-		}
+		Object.setPrototypeOf( this, Ozzwave.prototype)
+		this.path= this.path|| (options&& options.path)|| "/dev/ttyACM0"
 	}
 	/**
 	 * Patch emit to generate synthetic Ozz events from raw OpenZwave events
@@ -31,7 +30,7 @@ class Ozzwave extends OpenZwave{
 	emit( eventName, ...args){
 		// lookup what kind of raw event this is
 		var decode= eventMap[ eventName]
-		if( decode=== null){
+		if( decode=== undefined){
 			// failed to detect a raw OpenZwave event, pass this through
 			return OpenZwave.prototype.emit.call( this, args[0])
 		}
@@ -48,7 +47,7 @@ class Ozzwave extends OpenZwave{
 			o.timestamp= timestamp
 		}else{
 			o= {
-				eventName: decode.name
+				eventName: decode.name,
 				eventCategory: decode.category,
 				timestamp
 			}
@@ -58,7 +57,7 @@ class Ozzwave extends OpenZwave{
 		  id,
 		  info
 		for( var i=0; i< decode.args.length; ++i){
-			if( i=== become){
+			if( i== become){
 				// o *is* the become arg, no need to add it again.
 				continue
 			}
@@ -92,6 +91,7 @@ class Ozzwave extends OpenZwave{
 		}
 		function jsonLog( o){
 			to.write( JSON.stringify(o))
+			to.write( "\n")
 		}
 		for( var i in eventMap){
 			var eventName= eventMap[ i].eventName

@@ -23,7 +23,7 @@ var eventMap= {
 	"value refreshed":{ name: "refreshed", category:"value", args:[ "nodeId", "classId", "valueId"]},
 	"value removed":{ name: "removed", category:"value", args:[ "nodeId", "classId", "instance", "index"]},
 	"controller command":{ name:"command", category:"driver", args:[ "nodeId", "state", "error", "help"]},
-	"notification":{ name:"notification", category:"node", args:["nodeId", "notification"]}
+	"notification":{ name:"notification", category:"node", args:[ "nodeId", "notification"]}
 }
 
 /*
@@ -33,17 +33,18 @@ var eventMap= {
  * and have the other fields added to it, as opposed to being added to a blank object.
  */
 for( var eventType in eventMap){
-	var t= eventMap[eventType]
+	var t= eventMap[ eventType]
 	t.eventName= camelCase( t.category+ '_'+ t.name)
 	
 	if( !t.become){
 		var info= new RegExp(t.category+ ".*"+ "Info")
 		var id= new RegExp(t.category+ ".*"+ "Id")
-		for( var key of t.args){
+		for( var i in t.args){
+			var key= t.args[ i]
 			if( info.test( key)){
-				t.become= key
+				t.become= i
 			}else if( !t.become&& id.test( key)){
-				t.become= key
+				//t.become= i
 			}
 		}
 	}

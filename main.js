@@ -3,13 +3,15 @@ var Ozz= require( "./ozzwave")
 
 function main( extra){
 	var
-	  verbose= parseInt( process.env.V) > 99,
+	  verbose= parseInt( process.env.V) > 98,
 	  options= {
-		ConsoleOutput: verbose
+		ConsoleOutput: verbose,
+		Logging: false,
+		path: process.argv[2]
 	  },
-	  ozz= new Ozz( process.argv[ 2], options)
-	ozz.debugLog()
+	  ozz= new Ozz( options)
 	ozz.connect()
+	ozz.debugLog()
 	if( extra){
 		extra.call( ozz)
 	}
