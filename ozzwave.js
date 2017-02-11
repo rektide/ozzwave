@@ -107,4 +107,8 @@ class Ozzwave extends OpenZwave{
 	}
 }
 
+if( require.main=== module){
+	require( "./main")()
+}
+
 module.exports= Ozzwave
