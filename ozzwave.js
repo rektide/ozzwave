@@ -9,7 +9,7 @@ var
 
 try{
 	// if available, ozw-command-classes will create a human readable "command class" when describing nodes & values
-	ozwCommandClasses= require( "ozw-command-classes")
+	ozwCommandClasses= require( "ozw-command-classes/lookup")
 }catch(ex){
 }
 
@@ -65,6 +65,11 @@ class Ozzwave extends OpenZwave{
 			  key= decode.args[ i],
 			  val= args[ i]
 			o[ key]= val
+		}
+
+		// attach human friendly names for command classes
+		if( o.classId){
+			o.class= ozwCommandLookup( o.classId)
 		}
 
 		// emit event
