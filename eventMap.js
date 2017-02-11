@@ -34,7 +34,7 @@ var eventMap= {
  */
 for( var eventType in eventMap){
 	var t= eventMap[ eventType]
-	t.eventName= camelCase( t.category+ '_'+ t.name)
+	t.eventName= t.category+ t.name
 	
 	if( !t.become){
 		var info= new RegExp(t.category+ ".*"+ "Info")

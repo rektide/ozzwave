@@ -1,6 +1,6 @@
 {
 	"name": "ozzwave",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "event sourced OpenZwave",
 	"main": "ozzwave.js",
 	"scripts": {
