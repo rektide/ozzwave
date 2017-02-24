@@ -5,11 +5,11 @@ var
   fs= require( "fs"),
   memoizee= require( "memoizee"),
   OpenZwave= require( "openzwave-shared"),
-  ozwCommandClasses
+  ozwCommandLookup
 
 try{
 	// if available, ozw-command-classes will create a human readable "command class" when describing nodes & values
-	ozwCommandClasses= require( "ozw-command-classes/lookup")
+	ozwCommandLookup= require( "ozw-command-classes/lookup")
 }catch(ex){
 }
 
@@ -69,7 +69,7 @@ class Ozzwave extends OpenZwave{
 
 		// attach human friendly names for command classes
 		if( o.classId){
-			o.class= ozwCommandLookup( o.classId)
+			o.class= ozwCommandLookup[ o.classId]
 		}
 
 		// emit event
@@ -112,8 +112,8 @@ class Ozzwave extends OpenZwave{
 	}
 }
 
+module.exports= Ozzwave
+
 if( require.main=== module){
 	require( "./main")()
 }
-
-module.exports= Ozzwave
